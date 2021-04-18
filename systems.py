@@ -28,24 +28,25 @@ def load_dataframe(es, documents_path, index_name, pipeline_name):
         pd_chunk = create_tokens.main(f)
         print("Dataframe Created")
         for success, info in helpers.parallel_bulk(es, doc_generator(pd_chunk, index_name),
-                                            index=index_name, pipeline=pipeline_name):
+                                            index=index_name):
             #print("Insert into Index Complete")
             if not success:
                 return 'A document failed: ' + info, 400
 
 def filterKeys(document):
-    use_these_keys = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS', 'TITLE_TOKENZ_GERMAN', 'TITLE_TOKENZ_SCI', 'ABSTRACT_TOKENZ_GERMAN','ABSTRACT_TOKENZ_SCI', 'KEYWORDS_TOKENZ', 'MESH_TOKENZ', 'CHEM_TOKENZ']
+    use_these_keys = ['DBRECORDID', 'LANGUAGE','TITLE_TOKENZ_GERMAN', 'TITLE_TOKENZ_SCI', 'ABSTRACT_TOKENZ_GERMAN','ABSTRACT_TOKENZ_SCI', 'KEYWORDS_TOKENZ', 'MESH_TOKENZ', 'CHEM_TOKENZ']
     return {key: document[key] for key in use_these_keys }
 
 def doc_generator(df, index_name):
     print("doc_generator started")
-    df_iter = df.iterrows()
-    for index, document in df_iter:
-        yield {
-                "_index": index_name,
-                "_id" : f"{document['DBRECORDID']}",
-                "_source": filterKeys(document),
-            }
+    #df_iter = df.iterrows()
+    for element in df:
+        for index, document in element.iterrows():
+            yield {
+                    "_index": index_name,
+                    "_id" : f"{document['DBRECORDID']}",
+                    "_source": filterKeys(document),
+                }
 
 def load_csv(directory, id_field):
     for path, subdir, file in os.walk(directory):
@@ -120,7 +121,7 @@ class Ranker(object):
         #if self.es.indices.exists(self.INDEX):
         #    self.es.indices.delete(index=self.INDEX)
 
-        load_ingest_pipeline_settings(self.es, self.pipeline_settings_path)
+        #load_ingest_pipeline_settings(self.es, self.pipeline_settings_path)
         
         if self.es.indices.exists(self.INDEX):
             print ("Index ", self.INDEX, " already exists. Inserting into index now.")
@@ -129,16 +130,6 @@ class Ranker(object):
 
         load_dataframe(self.es, self.documents_path, self.INDEX, "attachment")
         print ("All Documents have been indexed.  >>END<<")
-        '''
-        for filename in os.listdir(self.documents_path):
-            if filename.endswith('.jsonl'):
-                fullpath=os.path.join(self.documents_path, filename)
-                print("Inserting file ->", filename)
-                with open(fullpath, "r", encoding="utf8") as open_file:
-                    reader = jsonlines.Reader(open_file)
-                    #json_docs.append(jsonlines.Reader(open_file))
-                    helpers.bulk(self.es, reader, ignore = 400,index=self.INDEX, raise_on_error=False, stats_only=False)
-        '''
         #clear_prep_data('./prep_data/filtered_documents')
         return 'Index built with ' + ' docs', 200
 
@@ -193,7 +184,7 @@ class Ranker(object):
         return {
             'page': page,
             'rpp': rpp,
-            'query': query,
+            'query': [query_tokenized_ori, query_tokenized_german, query_tokenized_eng],
             'itemlist': itemlist,
             'num_found': len(itemlist)
         }

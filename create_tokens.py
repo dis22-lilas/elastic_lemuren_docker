@@ -1,15 +1,14 @@
 import pandas as pd
 import numpy as np
-
-# from elasticsearch import Elasticsearch
 import en_core_sci_lg
 import de_core_news_lg
 import os
 import datetime
-import string
+from pandarallel import pandarallel
+import warnings
 
-# %%
-
+warnings.filterwarnings('ignore')
+pandarallel.initialize(use_memory_fs=False)
 
 # client = Elasticsearch([{'host': 'localhost'}, {'port': 9200}])
 
@@ -18,7 +17,6 @@ nlp_german = de_core_news_lg.load(exclude=["parser", "ner", "tok2vec", "textcat"
 nlp_sci = en_core_sci_lg.load(exclude=["parser", "ner", "tok2vec", "textcat"])
 
 
-# %%
 # UNIVERSAL
 
 def is_token_allowed_german(token):
@@ -83,16 +81,16 @@ def preprocesstoken_sci(token):
 #         return str([])
 
 
-# def tokenize_string_sci(x):
-#     return ",".join([preprocesstoken_sci(token) for token in nlp_sci(x) if is_token_allowed_sci(token)])
-
-
 def tokenize_string_sci(x):
-    string = ""
-    for token in nlp_sci(x):
-        if is_token_allowed_sci(token):
-            string = string + "," + preprocesstoken_sci(token)
-    return string
+    return ",".join([preprocesstoken_sci(token) for token in nlp_sci(x) if is_token_allowed_sci(token)])
+
+
+# def tokenize_string_sci(x):
+#     string = ""
+#     for token in nlp_sci(x):
+#         if is_token_allowed_sci(token):
+#             string = string + "," + preprocesstoken_sci(token)
+#     return string
 
 
 def prettify(x):
@@ -111,15 +109,17 @@ def prettify_v2(x):
     return x.translate(x.maketrans("", "", "[]'\""))
     # return x.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
 
+
+# df = pd.read_csv("all_filtered_linux_test.csv", delimiter=",")
+# %%
 def main(f):
-
-    df_test = pd.DataFrame()
-    df_chunks = pd.read_json(path_or_buf=f"data/livivo/documents/{f}", lines=True, chunksize=100000)
-
-    for df in df_chunks:
+    df_chunks = pd.read_json(path_or_buf=f"./data/livivo/documents/{f}", lines=True,
+                            chunksize=10000,
+                            encoding="utf-8")  # increase Chunksize to atleast 100 000 on the VM
+    # %%
+    for i, df in enumerate(df_chunks):
+        print(datetime.datetime.now(), "  ", i)
         cols = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS']
-        if 'ABSTRACT' not in df.columns:
-            df['ABSTRACT'] = ""
         if 'MESH' not in df.columns:
             df['MESH'] = ""
         if 'CHEM' not in df.columns:
@@ -127,72 +127,67 @@ def main(f):
         if 'KEYWORDS' not in df.columns:
             df['KEYWORDS'] = ""
 
-        df = df[cols]
+        df = df.loc[:, cols]
         df.fillna('', inplace=True)
 
-        df['TITLE'] = df['TITLE'].apply(prettify)
-        df['ABSTRACT'] = df['ABSTRACT'].apply(prettify)
-        df['LANGUAGE'] = df['LANGUAGE'].apply(prettify)
+        df.loc[:, 'TITLE'] = df['TITLE'].parallel_apply(prettify)
+        df.loc[:, 'ABSTRACT'] = df['ABSTRACT'].parallel_apply(prettify)
+        df.loc[:, 'LANGUAGE'] = df['LANGUAGE'].parallel_apply(prettify)
 
-        df['MESH'] = df['MESH'].apply(prettify_v2)
-        df['CHEM'] = df['CHEM'].apply(prettify_v2)
-        df['KEYWORDS'] = df['KEYWORDS'].apply(prettify_v2)
+        df.loc[:, 'MESH'] = df['MESH'].parallel_apply(prettify_v2)
+        df.loc[:, 'CHEM'] = df['CHEM'].parallel_apply(prettify_v2)
+        df.loc[:, 'KEYWORDS'] = df['KEYWORDS'].parallel_apply(prettify_v2)
 
-        # TITLE
-        df['TITLE_TOKENZ_GERMAN'] = ""
-        df['TITLE_TOKENZ_SCI'] = ""
-        df['ABSTRACT_TOKENZ_GERMAN'] = ""
-        df['ABSTRACT_TOKENZ_SCI'] = ""
-        df['KEYWORDS_TOKENZ'] = ""
-        df['MESH_TOKENZ'] = ""
-        df['CHEM_TOKENZ'] = ""
-
-        numpy_df = df.to_numpy()
-
-        german_mask_numpy = numpy_df[:, 3] == "ger"
-
-        else_mask_numpy = (numpy_df[:, 3] != "ger") | (numpy_df[:, 3] == "")
+        # 
+        german_mask = df['LANGUAGE'] == 'ger'
+        else_mask = (df['LANGUAGE'] != 'ger') | (df['LANGUAGE'] == '')
 
         # TITLE
-        numpy_df[german_mask_numpy, 7] = np.apply_along_axis(tokenize_german_numpy, 0, numpy_df[german_mask_numpy, 1])
-        #print(datetime.datetime.now(), "  german title")
-        numpy_df[else_mask_numpy, 8] = np.apply_along_axis(tokenize_sci_numpy, 0, numpy_df[else_mask_numpy, 1])
-        #print(datetime.datetime.now(), "  sci title")
+        df.loc[german_mask, 'TITLE_TOKENZ_GERMAN'] = df.loc[german_mask, 'TITLE'].parallel_apply(
+            tokenize_string_german)
+        print("title_tokenz_german")
+
+        df.loc[else_mask, 'TITLE_TOKENZ_SCI'] = df.loc[else_mask, 'TITLE'].parallel_apply(tokenize_string_sci)
+        print("title_tokenz_sci")
+
+        df.drop(columns=["TITLE"], inplace=True)
 
         # ABSTRACT
-        numpy_df[german_mask_numpy, 9] = np.apply_along_axis(tokenize_german_numpy, 0, numpy_df[german_mask_numpy, 2])
-        #print(datetime.datetime.now(), "  german abstract")
+        df.loc[german_mask, 'ABSTRACT_TOKENZ_GERMAN'] = df.loc[german_mask, 'ABSTRACT'].parallel_apply(
+            tokenize_string_german)
+        print("abstract_tokenz_german")
 
-        numpy_df[else_mask_numpy, 10] = np.apply_along_axis(tokenize_sci_numpy, 0, numpy_df[else_mask_numpy, 2])
-        #print(datetime.datetime.now(), "  sci abstract")
+        df.loc[else_mask, 'ABSTRACT_TOKENZ_SCI'] = df.loc[else_mask, 'ABSTRACT'].parallel_apply(
+            tokenize_string_sci)
+        print("abstract_tokenz_sci")
+        df.drop(columns=["ABSTRACT"], inplace=True)
 
-        # KEYWORDS_TOKENZ
-        numpy_df[:, 11] = np.apply_along_axis(tokenize_sci_numpy, 0, numpy_df[:, 6])
-        #print(datetime.datetime.now(), "  keywords")
 
-        # MESH_TOKENZ
-        numpy_df[:, 12] = np.apply_along_axis(tokenize_sci_numpy, 0, numpy_df[:, 4])
-        #print(datetime.datetime.now(), "  mesh")
+        df.loc[:, 'KEYWORDS_TOKENZ'] = df['KEYWORDS'].parallel_apply(tokenize_string_sci)
+        print("keywords")
+        df.drop(columns=["KEYWORDS"], inplace=True)
 
-        # CHEM_TOKENZ
-        numpy_df[:, 13] = np.apply_along_axis(tokenize_sci_numpy, 0, numpy_df[:, 5])
-        #print(datetime.datetime.now(), "  chem")
 
-        new_df = pd.DataFrame(numpy_df, columns=df.columns)
-        df_test = df_test.append(new_df, ignore_index=True)
-    #print(len((df_test.index)))
-    return df_test
+        df.loc[:, 'MESH_TOKENZ'] = df['MESH'].parallel_apply(tokenize_string_sci)
+        print("mesh_to")
+        df.drop(columns=["MESH"], inplace=True)
 
-            #print(df.columns)
-            #new_df = new_df.drop(["AUTHOR", "INSTITUTION", "PUBLISHER", "SOURCE", "PUBLDATE", "PUBLYEAR", "PUBLPLACE", "PUBLCOUNTRY","IDENTIFIER", "EISSN", "PISSN", "DOI", "VOLUME", "ISSUE", "PAGES", "ISSN", "DATABASE", "DOCUMENTURL"], axis=1)
+
+        df.loc[:, 'CHEM_TOKENZ'] = df['CHEM'].parallel_apply(tokenize_string_sci)
+        print("chem_to")
+        df.drop(columns=["CHEM"], inplace=True)
+        
         # FOR TEST ONLY REMOVE THE BREAK!!
-        #break
+        # break
         # if file does not exist write header
-            #f = f.replace(".jsonl", ".csv")
-            #if os.path.isfile(f"data/livivo/filtered_documents/{f}"):
-            #    new_df.to_csv(f"data/livivo/filtered_documents/{f}", mode='a', header=False, index=False)
-            #else:  # else it exists so append without writing the header
-            #    new_df.to_csv(f"data/livivo/filtered_documents/{f}", header=df.columns, index=False)
+        df.fillna("", inplace =True)
+        yield df
+        '''
+        if not os.path.isfile('fast_concat_utf.csv'):
+            df.to_csv('fast_concat_utf.csv', header=df.columns, index=False)
+        else:  # else it exists so append without writing the header
+            df.to_csv('fast_concat_utf.csv', mode='a', header=False, index=False)
+        '''
 
 if __name__ == '__main__':
     main()

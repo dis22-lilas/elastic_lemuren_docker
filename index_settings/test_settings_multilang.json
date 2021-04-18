@@ -140,29 +140,6 @@
                 "type": "text",
                 "index": true
             },
-            "TITLE": { 
-                "type": "text",
-                "fields": {
-                    "analysis": { 
-                        "type":     "text",
-                        "analyzer": "covid_analyzer",
-                        "similarity": "LMJelinekMercer_short"
-                    },
-                    "keyword": { 
-                        "type":     "keyword"
-                    }
-                }
-            },
-            "TITLE_EN" :{
-                "type": "text",
-                "analyzer": "english",
-                "similarity": "LMJelinekMercer_short"
-            },
-            "TITLE_GER": {
-                "type": "text",
-                "analyzer": "german",
-                "similarity": "LMJelinekMercer_short"
-            },
             "TITLE_TOKENZ_GERMAN": {
                 "type": "text",
                 "index": true,
@@ -207,24 +184,6 @@
                 "index": true,
                 "analyzer": "comma",
                 "similarity": "DFR_similarity"
-            },
-            "ABSTRACT": {
-                "type": "text",
-                "analyzer": "covid_analyzer",
-                "similarity": "DFR_similarity",
-                "index": true
-            },
-            "MESH": {
-                "type": "text",
-                "index": true
-            },
-            "CHEM": {
-                "type": "text",
-                "index": true
-            },
-            "KEYWORDS": {
-                "type": "text",
-                "index": true
             }
         } 
     } 

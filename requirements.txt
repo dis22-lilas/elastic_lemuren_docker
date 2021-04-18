@@ -1,9 +1,9 @@
 elasticsearch
-elasticsearch-dsl
 flask
 jsonlines
 requests
 pandas
+pandarallel
 spacy>=3.0.0,<4.0.0
 https://github.com/explosion/spacy-models/releases/download/xx_sent_ud_sm-3.0.0/xx_sent_ud_sm-3.0.0.tar.gz#egg=xx_sent_ud_sm
 spacy>=3.0.0,<4.0.0
@@ -11,4 +11,3 @@ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_l
 spacy>=3.0.0,<4.0.0
 https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.0.0/de_core_news_lg-3.0.0.tar.gz#egg=de_core_news_lg
 google_trans_new
-dask

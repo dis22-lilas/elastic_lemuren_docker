@@ -4,37 +4,25 @@
                     "should": [{
                         "query_string": {
                             "query": "query_tokenized_ori",
-                            "fields": ["TITLE_TOKENZ_SCI", "ABSTRACT_TOKENZ_SCI", "MESH_TOKENZ^5", "CHEM_TOKENZ^5",
-                                       "KEYWORDS_TOKENZ^5", "TITLE.keyword^8"],
-                            "analyzer": "comma",
-                            "fuzzy_transpositions": true,
-                            "fuzziness": "AUTO",
-                            "fuzzy_max_expansions": "5",
-                            "fuzzy_prefix_length": "0"
+                            "fields": ["TITLE_TOKENZ_SCI", "ABSTRACT_TOKENZ_SCI^0.75", "MESH_TOKENZ^1.7", "CHEM_TOKENZ^1.7",
+                                       "KEYWORDS_TOKENZ^1.7"],
+                            "analyzer": "comma"
                         }
                     },
 
                         {
                             "query_string": {
                                 "query": "query_tokenized_eng",
-                                "fields": ["TITLE_TOKENZ_SCI", "ABSTRACT_TOKENZ_SCI", "MESH_TOKENZ^5", "CHEM_TOKENZ^5",
-                                           "KEYWORDS_TOKENZ^5", "TITLE.keyword^8"],
-                                "analyzer": "comma",
-                                "fuzzy_transpositions": true,
-                                "fuzziness": "AUTO",
-                                "fuzzy_max_expansions": "5",
-                                "fuzzy_prefix_length": "0"
+                                "fields": ["TITLE_TOKENZ_SCI", "ABSTRACT_TOKENZ_SCI^0.75", "MESH_TOKENZ^1.7", "CHEM_TOKENZ^1.7",
+                                           "KEYWORDS_TOKENZ^1.7"],
+                                "analyzer": "comma"
                             }
                         },
                         {
                             "query_string": {
                                 "query": "query_tokenized_german",
-                                "fields": ["TITLE_TOKENZ_GERMAN", "ABSTRACT_TOKENZ_GERMAN"],
-                                "analyzer": "comma",
-                                "fuzzy_transpositions": true,
-                                "fuzziness": "AUTO",
-                                "fuzzy_max_expansions": "5",
-                                "fuzzy_prefix_length": "0"
+                                "fields": ["TITLE_TOKENZ_GERMAN", "ABSTRACT_TOKENZ_GERMAN^0.75"],
+                                "analyzer": "comma"
                             }}
                     ]
                 }

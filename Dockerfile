@@ -8,7 +8,7 @@ COPY . .
 
 RUN yum install -y https://repo.ius.io/ius-release-el7.rpm && \
     yum -y update && \
-    yum -y install gcc openssl-devel bzip2-devel libffi-devel wget make && \
+    yum -y install gcc openssl-devel bzip2-devel libffi-devel wget make xz-devel && \
     wget https://www.python.org/ftp/python/3.8.7/Python-3.8.7.tgz && \
     tar xzf Python-3.8.7.tgz && \
     cd Python-3.8.7 && \
