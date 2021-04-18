@@ -114,7 +114,7 @@ def prettify_v2(x):
 # %%
 def main(f):
     df_chunks = pd.read_json(path_or_buf=f"./data/livivo/documents/{f}", lines=True,
-                            chunksize=10000,
+                            chunksize=1000000,
                             encoding="utf-8")  # increase Chunksize to atleast 100 000 on the VM
     # %%
     for i, df in enumerate(df_chunks):
@@ -145,36 +145,36 @@ def main(f):
         # TITLE
         df.loc[german_mask, 'TITLE_TOKENZ_GERMAN'] = df.loc[german_mask, 'TITLE'].parallel_apply(
             tokenize_string_german)
-        print("title_tokenz_german")
+        #print("title_tokenz_german")
 
         df.loc[else_mask, 'TITLE_TOKENZ_SCI'] = df.loc[else_mask, 'TITLE'].parallel_apply(tokenize_string_sci)
-        print("title_tokenz_sci")
+        #print("title_tokenz_sci")
 
         df.drop(columns=["TITLE"], inplace=True)
 
         # ABSTRACT
         df.loc[german_mask, 'ABSTRACT_TOKENZ_GERMAN'] = df.loc[german_mask, 'ABSTRACT'].parallel_apply(
             tokenize_string_german)
-        print("abstract_tokenz_german")
+        #print("abstract_tokenz_german")
 
         df.loc[else_mask, 'ABSTRACT_TOKENZ_SCI'] = df.loc[else_mask, 'ABSTRACT'].parallel_apply(
             tokenize_string_sci)
-        print("abstract_tokenz_sci")
+        #print("abstract_tokenz_sci")
         df.drop(columns=["ABSTRACT"], inplace=True)
 
 
         df.loc[:, 'KEYWORDS_TOKENZ'] = df['KEYWORDS'].parallel_apply(tokenize_string_sci)
-        print("keywords")
+        #print("keywords")
         df.drop(columns=["KEYWORDS"], inplace=True)
 
 
         df.loc[:, 'MESH_TOKENZ'] = df['MESH'].parallel_apply(tokenize_string_sci)
-        print("mesh_to")
+        #print("mesh_to")
         df.drop(columns=["MESH"], inplace=True)
 
 
         df.loc[:, 'CHEM_TOKENZ'] = df['CHEM'].parallel_apply(tokenize_string_sci)
-        print("chem_to")
+        #print("chem_to")
         df.drop(columns=["CHEM"], inplace=True)
         
         # FOR TEST ONLY REMOVE THE BREAK!!

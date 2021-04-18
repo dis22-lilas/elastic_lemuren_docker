@@ -107,7 +107,7 @@ class Ranker(object):
         self.query_settings_path = os.path.join('query_settings', 'query_settings.txt')
         self.pipeline_settings_path = os.path.join("pipeline_settings", "pipeline_settings.json")
 
-        self.es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+        self.es = Elasticsearch([{'host': 'localhost', 'port': 9200}], timeout=30, max_retries=10, retry_on_timeout=True)
         #self.documents_path = './data/livivo/documents'
         self.documents_path = './data/livivo/documents'
         #self.documents_path = './data/preprocessed_docs/*'
@@ -184,7 +184,7 @@ class Ranker(object):
         return {
             'page': page,
             'rpp': rpp,
-            'query': [query_tokenized_ori, query_tokenized_german, query_tokenized_eng],
+            'query': query,
             'itemlist': itemlist,
             'num_found': len(itemlist)
         }
