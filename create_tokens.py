@@ -114,8 +114,8 @@ def main(f):
         print(datetime.datetime.now(), "  ", i)
         cols = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS']
         for c in cols:
-        if c not in df.columns:
-            df[c] = ""
+            if c not in df.columns:
+                df[c] = ""
 
         df = df.loc[:, cols]
         df.fillna('', inplace=True)
