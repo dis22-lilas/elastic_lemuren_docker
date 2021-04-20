@@ -120,12 +120,9 @@ def main(f):
     for i, df in enumerate(df_chunks):
         print(datetime.datetime.now(), "  ", i)
         cols = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS']
-        if 'MESH' not in df.columns:
-            df['MESH'] = ""
-        if 'CHEM' not in df.columns:
-            df['CHEM'] = ""
-        if 'KEYWORDS' not in df.columns:
-            df['KEYWORDS'] = ""
+        for c in cols:
+        if c not in df.columns:
+            df[c] = ""
 
         df = df.loc[:, cols]
         df.fillna('', inplace=True)
