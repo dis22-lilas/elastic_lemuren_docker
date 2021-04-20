@@ -96,18 +96,11 @@ def tokenize_string_sci(x):
 def prettify(x):
     if type(x) == list:
         x = x[0]
-
-    # Test
-    return x.translate(x.maketrans("", "", "[]'\""))
-    # return x.replace("[", "").replace("]", "").lstrip("'").rstrip("'").lstrip('"').rstrip('"')
-
-
-def prettify_v2(x):
-    if type(x) == list:
-        x = x[0]
-    # Test
-    return x.translate(x.maketrans("", "", "[]'\""))
-    # return x.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+        return x.translate(x.maketrans("", "", "[]'""))
+    elif type(x) == str:
+        return x.translate(x.maketrans("", "", "[]'""))
+    else:
+        return ""
 
 
 # df = pd.read_csv("all_filtered_linux_test.csv", delimiter=",")
@@ -131,9 +124,9 @@ def main(f):
         df.loc[:, 'ABSTRACT'] = df['ABSTRACT'].parallel_apply(prettify)
         df.loc[:, 'LANGUAGE'] = df['LANGUAGE'].parallel_apply(prettify)
 
-        df.loc[:, 'MESH'] = df['MESH'].parallel_apply(prettify_v2)
-        df.loc[:, 'CHEM'] = df['CHEM'].parallel_apply(prettify_v2)
-        df.loc[:, 'KEYWORDS'] = df['KEYWORDS'].parallel_apply(prettify_v2)
+        df.loc[:, 'MESH'] = df['MESH'].parallel_apply(prettify)
+        df.loc[:, 'CHEM'] = df['CHEM'].parallel_apply(prettify)
+        df.loc[:, 'KEYWORDS'] = df['KEYWORDS'].parallel_apply(prettify)
 
         # 
         german_mask = df['LANGUAGE'] == 'ger'
