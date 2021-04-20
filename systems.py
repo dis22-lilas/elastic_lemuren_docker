@@ -142,6 +142,8 @@ class Ranker(object):
             #operator = 'OR'  ### Kritisch weil User potentiell mehrere operatoren kombiniren könnte
             #if ' AND ' in query and not ' OR ' in query:  # wahrscheinlich nur query_string besser
             #    operator = 'AND'
+            query_raw = query
+            query = re.sub(r'[^\w\d\s]+', '', query)
             query = query.replace(" AND ", " +++++ ")
             query = query.replace(" OR ", " ||||| ")
 
@@ -162,6 +164,7 @@ class Ranker(object):
             query_tokenized_german = query_tokenized_german.replace("+,+,+,+,+", "AND")
             query_tokenized_german = query_tokenized_german.replace("|||||", "OR")
 
+            query_tokenized_ori = re.sub(r'[^\w\d\s]+', '', query_tokenized_ori)
             query_tokenized_ori = query_tokenized_ori.replace("+,+,+,+,+", "AND")
             query_tokenized_ori = query_tokenized_ori.replace("|||||", "OR")
 
