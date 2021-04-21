@@ -17,7 +17,6 @@ nlp_german = de_core_news_lg.load(exclude=["parser", "ner", "tok2vec", "textcat"
 nlp_sci = en_core_sci_lg.load(exclude=["parser", "ner", "tok2vec", "textcat"])
 
 # UNIVERSAL
-
 def is_token_allowed_german(token):
     '''
          Only allow valid tokens which are not stop words
@@ -33,27 +32,21 @@ def preprocesstoken_german(token):
     return token.lemma_.strip().lower()
 
 
-# def tokenize_german(x):
-#     try:
-#         return str([preprocesstoken_german(token) for token in nlp_german(x) if is_token_allowed_german(token)])
-#     except:
-#         return str([])
-
 
 def tokenize_string_german(x):
     return ",".join([preprocesstoken_german(token) for token in nlp_german(x) if is_token_allowed_german(token)])
 
-
-def tokenize_german_numpy(x):
-    return np.array(
-        [[",".join([preprocesstoken_german(token) for token in nlp_german(i) if is_token_allowed_german(token)])] for i
-         in x], dtype=str).reshape((len(x),))
-
-
-def tokenize_sci_numpy(x):
-    return np.array(
-        [[",".join([preprocesstoken_sci(token) for token in nlp_sci(i) if is_token_allowed_sci(token)])] for i in x],
-        dtype=str).reshape((len(x),))
+#
+# def tokenize_german_numpy(x):
+#     return np.array(
+#         [[",".join([preprocesstoken_german(token) for token in nlp_german(i) if is_token_allowed_german(token)])] for i
+#          in x], dtype=str).reshape((len(x),))
+#
+#
+# def tokenize_sci_numpy(x):
+#     return np.array(
+#         [[",".join([preprocesstoken_sci(token) for token in nlp_sci(i) if is_token_allowed_sci(token)])] for i in x],
+#         dtype=str).reshape((len(x),))
 
 
 # SCIENTIFIC
@@ -73,31 +66,19 @@ def preprocesstoken_sci(token):
     return token.lemma_.strip().lower()
 
 
-# def tokenize_sci(x):
-#     try:
-#         return str([preprocesstoken_sci(token) for token in nlp_sci(x) if is_token_allowed_sci(token)])
-#     except:
-#         return str([])
-
 
 def tokenize_string_sci(x):
     return ",".join([preprocesstoken_sci(token) for token in nlp_sci(x) if is_token_allowed_sci(token)])
 
 
-# def tokenize_string_sci(x):
-#     string = ""
-#     for token in nlp_sci(x):
-#         if is_token_allowed_sci(token):
-#             string = string + "," + preprocesstoken_sci(token)
-#     return string
 
 
 def prettify(x):
     if type(x) == list:
         x = x[0]
-        return x.translate(x.maketrans("", "", "[]'""))
+        return x.translate(x.maketrans("", "", "[]'\""))
     elif type(x) == str:
-        return x.translate(x.maketrans("", "", "[]'""))
+        return x.translate(x.maketrans("", "", "[]'\""))
     else:
         return ""
 
