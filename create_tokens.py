@@ -91,77 +91,81 @@ def main(f):
                             encoding="utf-8")  # increase Chunksize to atleast 100 000 on the VM
     # %%
     for i, df in enumerate(df_chunks):
-        if len(df) == 0:
+        try:
+            if len(df) == 0:
+                continue
+            print(datetime.datetime.now(), "  ", i)
+            cols = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS']
+            df.columns = [df_col.upper() for df_col in df.columns]
+            for c in cols:
+                if c not in df.columns:
+                    df[c] = ""
+
+            df = df.loc[:, cols]
+            df.fillna('', inplace=True)
+
+            df.loc[:, 'TITLE'] = df['TITLE'].parallel_apply(prettify)
+
+            df.loc[:, 'ABSTRACT'] = df['ABSTRACT'].parallel_apply(prettify)
+            df.loc[:, 'LANGUAGE'] = df['LANGUAGE'].parallel_apply(prettify)
+
+            df.loc[:, 'MESH'] = df['MESH'].parallel_apply(prettify)
+            df.loc[:, 'CHEM'] = df['CHEM'].parallel_apply(prettify)
+            df.loc[:, 'KEYWORDS'] = df['KEYWORDS'].parallel_apply(prettify)
+
+            df['TITLE_TOKENZ_GERMAN'] = ""
+            df['TITLE_TOKENZ_SCI'] = ""
+
+            df['ABSTRACT_TOKENZ_GERMAN'] = ""
+            df['ABSTRACT_TOKENZ_SCI'] = ""
+
+            german_mask = df['LANGUAGE'] == 'ger'
+            else_mask = (df['LANGUAGE'] != 'ger') | (df['LANGUAGE'] == '')
+
+            if sum(german_mask) > 0:
+
+                # TITLE
+                df.loc[german_mask, 'TITLE_TOKENZ_GERMAN'] = df.loc[german_mask, 'TITLE'].parallel_apply(
+                    tokenize_string_german)
+                # print("title_tokenz_german")
+
+                # ABSTRACT
+                df.loc[german_mask, 'ABSTRACT_TOKENZ_GERMAN'] = df.loc[german_mask, 'ABSTRACT'].parallel_apply(
+                    tokenize_string_german)
+                # print("abstract_tokenz_german")
+
+            if sum(else_mask) > 0:
+                df.loc[else_mask, 'TITLE_TOKENZ_SCI'] = df.loc[else_mask, 'TITLE'].parallel_apply(tokenize_string_sci)
+                # print("title_tokenz_sci")
+
+                df.drop(columns=["TITLE"], inplace=True)
+
+                df.loc[else_mask, 'ABSTRACT_TOKENZ_SCI'] = df.loc[else_mask, 'ABSTRACT'].parallel_apply(
+                    tokenize_string_sci)
+                # print("abstract_tokenz_sci")
+                df.drop(columns=["ABSTRACT"], inplace=True)
+
+
+            df.loc[:, 'KEYWORDS_TOKENZ'] = df['KEYWORDS'].parallel_apply(tokenize_string_sci)
+            # print("keywords")
+            df.drop(columns=["KEYWORDS"], inplace=True)
+
+            df.loc[:, 'MESH_TOKENZ'] = df['MESH'].parallel_apply(tokenize_string_sci)
+            # print("mesh_to")
+            df.drop(columns=["MESH"], inplace=True)
+
+            df.loc[:, 'CHEM_TOKENZ'] = df['CHEM'].parallel_apply(tokenize_string_sci)
+            # print("chem_to")
+            df.drop(columns=["CHEM"], inplace=True)
+
+            # FOR TEST ONLY REMOVE THE BREAK!!
+            # break
+            # if file does not exist write header
+            df.fillna("", inplace=True)
+        except:
             continue
-        print(datetime.datetime.now(), "  ", i)
-        cols = ['DBRECORDID', 'TITLE', 'ABSTRACT', 'LANGUAGE', 'MESH', 'CHEM', 'KEYWORDS']
-        df.columns = [df_col.upper() for df_col in df.columns]
-        for c in cols:
-            if c not in df.columns:
-                df[c] = ""
-
-        df = df.loc[:, cols]
-        df.fillna('', inplace=True)
-
-        df.loc[:, 'TITLE'] = df['TITLE'].parallel_apply(prettify)
-
-        df.loc[:, 'ABSTRACT'] = df['ABSTRACT'].parallel_apply(prettify)
-        df.loc[:, 'LANGUAGE'] = df['LANGUAGE'].parallel_apply(prettify)
-
-        df.loc[:, 'MESH'] = df['MESH'].parallel_apply(prettify)
-        df.loc[:, 'CHEM'] = df['CHEM'].parallel_apply(prettify)
-        df.loc[:, 'KEYWORDS'] = df['KEYWORDS'].parallel_apply(prettify)
-
-        df['TITLE_TOKENZ_GERMAN'] = ""
-        df['TITLE_TOKENZ_SCI'] = ""
-
-        df['ABSTRACT_TOKENZ_GERMAN'] = ""
-        df['ABSTRACT_TOKENZ_SCI'] = ""
-
-        german_mask = df['LANGUAGE'] == 'ger'
-        else_mask = (df['LANGUAGE'] != 'ger') | (df['LANGUAGE'] == '')
-
-        if sum(german_mask) > 0:
-
-            # TITLE
-            df.loc[german_mask, 'TITLE_TOKENZ_GERMAN'] = df.loc[german_mask, 'TITLE'].parallel_apply(
-                tokenize_string_german)
-            # print("title_tokenz_german")
-
-            # ABSTRACT
-            df.loc[german_mask, 'ABSTRACT_TOKENZ_GERMAN'] = df.loc[german_mask, 'ABSTRACT'].parallel_apply(
-                tokenize_string_german)
-            # print("abstract_tokenz_german")
-
-        if sum(else_mask) > 0:
-            df.loc[else_mask, 'TITLE_TOKENZ_SCI'] = df.loc[else_mask, 'TITLE'].parallel_apply(tokenize_string_sci)
-            # print("title_tokenz_sci")
-
-            df.drop(columns=["TITLE"], inplace=True)
-
-            df.loc[else_mask, 'ABSTRACT_TOKENZ_SCI'] = df.loc[else_mask, 'ABSTRACT'].parallel_apply(
-                tokenize_string_sci)
-            # print("abstract_tokenz_sci")
-            df.drop(columns=["ABSTRACT"], inplace=True)
-
-
-        df.loc[:, 'KEYWORDS_TOKENZ'] = df['KEYWORDS'].parallel_apply(tokenize_string_sci)
-        # print("keywords")
-        df.drop(columns=["KEYWORDS"], inplace=True)
-
-        df.loc[:, 'MESH_TOKENZ'] = df['MESH'].parallel_apply(tokenize_string_sci)
-        # print("mesh_to")
-        df.drop(columns=["MESH"], inplace=True)
-
-        df.loc[:, 'CHEM_TOKENZ'] = df['CHEM'].parallel_apply(tokenize_string_sci)
-        # print("chem_to")
-        df.drop(columns=["CHEM"], inplace=True)
-
-        # FOR TEST ONLY REMOVE THE BREAK!!
-        # break
-        # if file does not exist write header
-        df.fillna("", inplace=True)
-        yield df
+        else:
+            yield df
         '''
         if not os.path.isfile('fast_concat_utf.csv'):
             df.to_csv('fast_concat_utf.csv', header=df.columns, index=False)
